@@ -114,7 +114,7 @@ byte led_flag = 0;
 unsigned long previousMillis = 0;
 unsigned long prevMillisPRINT = 0;
 const unsigned long interval = 3000;  
-const unsigned long intervalPRINT = 3000; 
+const unsigned long intervalPRINT = 7000; 
 
 
 
@@ -204,8 +204,8 @@ void loop() {
     RC_SEND(0,1);
     RC_SEND(1,1);
     IR_SEND(0xF7E01F); 
-    delay(3000);
-    IR_SEND(0xF750AF);
+    delay(300);
+    //IR_SEND(0xF750AF);
 
   }
   
@@ -313,7 +313,7 @@ void IR_SEND(unsigned long ircode)
 //      delay(100);
 //    }
     
-  //irRecv.enableIRIn();
+  irRecv.enableIRIn();
   RCrecv.enableReceive(0);
   RCsend.enableTransmit(RCTX_PIN);
   RCsend.setProtocol(1);
