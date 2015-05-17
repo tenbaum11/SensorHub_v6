@@ -23,6 +23,23 @@ const etekCODES etekArr [NUMBER_OF_etekELEMENTS] PROGMEM = {
 };  
 
 
+// *****************************************
+// LED RGB LIGHT BULB
+// *****************************************
+const int NUMBER_OF_bulbELEMENTS = 24;
+typedef struct {
+   long int bulbValArr;
+   char bulbTxtArr[12];
+} bulbCODES;
+
+const bulbCODES bulbArr [NUMBER_OF_bulbELEMENTS] PROGMEM = {
+  { 0xF720DF, "bulbRED1" }, { 0xF710EF, "bulbRED2" }, { 0xF730CF, "bulbRED3" }, { 0xF708F7, "bulbRED4" }, { 0xF728D7, "bulbRED5" },
+  { 0xF7A05F, "bulbGRN1" }, { 0xF7906F, "bulbGRN2" }, { 0xF7B04F, "bulbGRN3" }, { 0xF78877, "bulbGRN4" }, { 0xF7A857, "bulbGRN5" }, 
+  { 0xF7609F, "bulbBLU1" }, { 0xF750AF, "bulbBLU2" }, { 0xF7708F, "bulbBLU3" }, { 0xF748B7, "bulbBLU4" }, { 0xF76897, "bulbBLU5" }, 
+  { 0xF7E01F, "bulbWHITE"  }, { 0xF7D02F, "bulbFLASH" }, { 0xF7F00F, "bulbSTROBE" }, { 0xF7C837, "bulbFADE" }, { 0xF7E817, "bulbSMOOTH" },
+  { 0xF700FF, "bulbBRITER" }, { 0xF7807F, "bulbDIMMER" }, { 0xF740BF, "bulbOFF" }, { 0xF7C03F, "bulbON" },
+};
+
 // MEGA 2560 PINS 
 const byte IRRX_PIN = 5;      // IMPLICITLY DEFINED IN IRLIB LIBRARY
 const byte RCRX_PIN = 2; 
@@ -36,7 +53,7 @@ const byte LED1_PIN = A0;
 
 const byte ANA1_PIN = A1;  // 
 const byte ANA2_PIN = A2;  // LDR
-const byte DIG1_PIN = 10;  // PIR
+const byte DIG1_PIN = 7;  // PIR
 const byte DIG2_PIN = 11;  // 
 
 // MICROPHONE
@@ -89,13 +106,17 @@ int irRECV_flag=0;
 
 
 // ^^^^ MIC VARIABLES ^^^^
-int mic_threshold = 100;
+int mic_threshold = 500;
 byte mic_flag = 0;
 byte led_flag = 0;
 
 // ^^^^ TIME DELAYS ^^^^
 unsigned long previousMillis = 0;
+unsigned long prevMillisPRINT = 0;
 const unsigned long interval = 3000;  
+const unsigned long intervalPRINT = 3000; 
+
+
 
 // #######################################################
 // SETUP
@@ -175,10 +196,27 @@ void loop() {
     Serial.println(F("LIGHT OFF")); 
   }
   
-//  Serial.println();
-//  Serial.print(F("LDR:"));     Serial.print(LDR_VAL);
-//  Serial.print(F(" | PIR: ")); Serial.println(PIR_VAL);
-//  Serial.println();
+  unsigned long currtMillisPRINT=millis();
+  if(currtMillisPRINT - prevMillisPRINT >= intervalPRINT) {
+    prevMillisPRINT = currtMillisPRINT;   
+    Serial.print(F("LDR:"));     Serial.print(LDR_VAL);
+    Serial.print(F(" | PIR: ")); Serial.println(PIR_VAL);
+    RC_SEND(0,1);
+    RC_SEND(1,1);
+    IR_SEND(0xF7E01F); 
+    delay(3000);
+    IR_SEND(0xF750AF);
+
+  }
+  
+  if(PIR_VAL!=0){
+    digitalWrite(LED1_PIN, HIGH);
+  } 
+  else{
+    digitalWrite(LED1_PIN, LOW);
+  }
+
+
   
 
   //Serial.println();
@@ -260,11 +298,20 @@ void IR_SEND(unsigned long ircode)
     unsigned long int down = 0x5743CC33;
     unsigned long int sleeps = 0x807FE817;
     
-    for(int h=0; h<8; h++){
+    for(int h=0; h<3; h++){
       irSendNEC.send(code_in);   // WESTINGHOUSE SLEEP
       delay(100);
     }
     delay(10); 
+    
+//    for(int h=0; h<3; h++){
+//      irSendNEC.send(0xF7E01F);   // WESTINGHOUSE SLEEP
+//      delay(100);
+//    }
+//    for(int h=0; h<3; h++){
+//      irSendNEC.send(0xF750AF);   // WESTINGHOUSE SLEEP
+//      delay(100);
+//    }
     
   //irRecv.enableIRIn();
   RCrecv.enableReceive(0);
