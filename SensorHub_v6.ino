@@ -3,6 +3,10 @@
 #include <SPI.h> // Not actualy used but needed to compile
 #include <RCSwitch.h>
 #include <IRLib.h>
+#include <Wire.h>
+#include "RTClib.h"
+RTC_DS1307 RTC;
+
 
 // *****************************************
 // ETEK CODES
@@ -117,6 +121,12 @@ const unsigned long interval = 3000;
 const unsigned long intervalPRINT = 7000; 
 
 
+// #######################################################
+// RTC
+// #######################################################
+
+
+
 
 // #######################################################
 // SETUP
@@ -124,6 +134,15 @@ const unsigned long intervalPRINT = 7000;
 void setup() {
   Serial.begin(9600);
     // if(!driver.init()) {Serial.println(F("init failed"));}  // screwed up ir library
+  
+  // RTC REAL-TIME CLOCK
+  Wire.begin();
+  RTC.begin();  
+  if (! RTC.isrunning()) {
+    Serial.println("RTC is NOT running!");
+    // following line sets the RTC to the date & time this sketch was compiled
+    RTC.adjust(DateTime(__DATE__, __TIME__));
+  }  
   
   pinMode(ANA1_PIN, INPUT);
   pinMode(ANA2_PIN, INPUT);
@@ -201,11 +220,14 @@ void loop() {
     prevMillisPRINT = currtMillisPRINT;   
     Serial.print(F("LDR:"));     Serial.print(LDR_VAL);
     Serial.print(F(" | PIR: ")); Serial.println(PIR_VAL);
-    RC_SEND(0,1);
-    RC_SEND(1,1);
-    IR_SEND(0xF7E01F); 
-    delay(300);
+    RTC_SHOW();
+    
+    //RC_SEND(0,1);
+    //RC_SEND(1,1);
+    //IR_SEND(0xF7E01F); 
+    //delay(300);
     //IR_SEND(0xF750AF);
+    //IR_SEND(0x807FE817);  // WH SLEEP
 
   }
   
@@ -268,7 +290,7 @@ void loop() {
   else{}
 
   irValue=0;
-  delay(40);
+  delay(4);
 
 }  // # END MAIN LOOP 
 
@@ -278,6 +300,27 @@ void loop() {
 // #######################################################
 // FUNCTIONS
 // #######################################################
+
+
+// RTC FUNCTION
+void RTC_SHOW(){
+    DateTime now = RTC.now();
+    Serial.print(now.year(), DEC);
+    Serial.print('/');
+    Serial.print(now.month(), DEC);
+    Serial.print('/');
+    Serial.print(now.day(), DEC);
+    Serial.print(' ');
+    Serial.print(now.hour(), DEC);
+    Serial.print(':');
+    Serial.print(now.minute(), DEC);
+    Serial.print(':');
+    Serial.print(now.second(), DEC);
+    Serial.println();  
+}
+
+
+
 
 //-------------------
 // IR REMOTE SEND 
@@ -298,7 +341,7 @@ void IR_SEND(unsigned long ircode)
     unsigned long int down = 0x5743CC33;
     unsigned long int sleeps = 0x807FE817;
     
-    for(int h=0; h<3; h++){
+    for(int h=0; h<15; h++){
       irSendNEC.send(code_in);   // WESTINGHOUSE SLEEP
       delay(100);
     }
