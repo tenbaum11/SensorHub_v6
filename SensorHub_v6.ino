@@ -223,11 +223,10 @@ void loop() {
     RTC_SHOW();
     
     //RC_SEND(0,1);
-    //RC_SEND(1,1);
-    //IR_SEND(0xF7E01F); 
-    //delay(300);
-    //IR_SEND(0xF750AF);
-    //IR_SEND(0x807FE817);  // WH SLEEP
+    //IR_SEND(0xF7E01F);     // LED Bulb WHITE
+    //delay(1000);
+    //IR_SEND(0xF750AF);     // LED Bulb Blue
+    //IR_SEND(0x807FE817);   // WH SLEEP
 
   }
   
