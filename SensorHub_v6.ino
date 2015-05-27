@@ -31,7 +31,7 @@ const etekCODES etekArr [NUMBER_OF_etekELEMENTS] PROGMEM = {
 // KEYPAD CODES
 // *****************************************
 
-const int NUMBER_OF_keypadELEMENTS = 10;
+const int NUMBER_OF_keypadELEMENTS = 30;
 typedef struct {
    long int keypadCodeArr;
    byte keypadID;
@@ -40,16 +40,36 @@ typedef struct {
 } keypadCODES;
 
 const keypadCODES keypadArr [NUMBER_OF_keypadELEMENTS] PROGMEM = {
-  {0x807F807F,0, 1, 1}, 
-  {0x807F40BF,1, 1, 2}, 
-  {0x807FC03F,2, 1, 3}, 
-  {0x807FDA25,3, 1, 4},
-  {0x807FA05F,4, 1, 5},
-  {0x807F609F,0, 0, 6},
-  {0x807FE01F,1, 0, 7},
-  {0x807F10EF,2, 0, 8},
-  {0x807F906F,3, 0, 9},
-  {0x807F00FF,4, 0, 0},
+  { 0x807F807F ,0, 1, 1 }, 
+  { 0x807F40BF, 1, 1, 2 }, 
+  { 0x807FC03F, 2, 1, 3 }, 
+  { 0x807FDA25, 3, 1, 4 },
+  { 0x807FA05F, 4, 1, 5 },
+  { 0x807F609F, 0, 0, 6 },
+  { 0x807FE01F, 1, 0, 7 },
+  { 0x807F10EF, 2, 0, 8 },
+  { 0x807F906F, 3, 0, 9 },
+  { 0x807F00FF, 4, 0, 0 },
+  { 0x1CE3807F, 0, 1, 1 },  
+  { 0x1CE340BF, 1, 1, 2 },  
+  { 0x1CE3C03F, 2, 1, 3 },  
+  { 0x1CE320DF, 3, 1, 4 },  
+  { 0x1CE3A05F, 4, 1, 5 },  
+  { 0x1CE3609F, 0, 0, 6 },  
+  { 0x1CE3E01F, 1, 0, 7 },  
+  { 0x1CE310EF, 2, 0, 8 },  
+  { 0x1CE3906F, 3, 0, 9 },  
+  { 0x1CE300FF, 4, 0, 0 },  
+  { 0x807F8877, 0, 1, 1 },  
+  { 0x807F48B7, 1, 1, 2 },  
+  { 0x807FC837, 2, 1, 3 },  
+  { 0x807F28D7, 3, 1, 4 },  
+  { 0x807FA857, 4, 1, 5 },  
+  { 0x807F6897, 0, 0, 6 },  
+  { 0x807FE817, 1, 0, 7 },  
+  { 0x807F18E7, 2, 0, 8 },  
+  { 0x807F9867, 3, 0, 9 },  
+  { 0x807F58A7, 4, 0, 0 },  
 };
 
 
