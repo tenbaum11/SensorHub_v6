@@ -324,6 +324,7 @@ void loop() {
   
   if(irValue!=0)
   {
+    Serial.println(F("Code check..."));  
     IR_CODE_CHECK(irValue);
   }
 
@@ -346,6 +347,8 @@ void loop() {
 // SENSOR READ FUNCTION
 void IR_CODE_CHECK(long int code){
  
+   byte ir_found_flag=0;
+   byte arrCNT=0;
    while(arrCNT<NUMBER_OF_keypadELEMENTS ){
      
       keypadCODES keypadItem1;
@@ -358,14 +361,16 @@ void IR_CODE_CHECK(long int code){
         Serial.print(ID);
         if(keypadItem1.keypadState==1)
         {
-          Serial.println(":ON");  
+          Serial.println(F(":ON"));  
+          ir_found_flag=1;
           RC_SEND(ID, 1);  
           break;
         } 
         else if(keypadItem1.keypadState==0)
         {
-          Serial.println("OFF");  
-          RC_SEND(ID, 0); 
+          Serial.println(F("OFF"));  
+          ir_found_flag=1;
+          RC_SEND(ID, 0);      
           break; 
         }
         break;
@@ -374,9 +379,12 @@ void IR_CODE_CHECK(long int code){
       arrCNT++;     
    }  // END WHILE LOOP
    
+   if(ir_found_flag==0)
+   {
+     Serial.println(F("IR UNKNOWN"));
+   }
   
-  
-  
+ 
 }
 
 
