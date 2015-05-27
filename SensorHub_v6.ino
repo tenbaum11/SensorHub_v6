@@ -28,6 +28,32 @@ const etekCODES etekArr [NUMBER_OF_etekELEMENTS] PROGMEM = {
 
 
 // *****************************************
+// KEYPAD CODES
+// *****************************************
+
+const int NUMBER_OF_keypadELEMENTS = 10;
+typedef struct {
+   long int keypadCodeArr;
+   byte keypadID;
+   byte keypadState;
+   byte keypadVal;
+} keypadCODES;
+
+const keypadCODES keypadArr [NUMBER_OF_keypadELEMENTS] PROGMEM = {
+  {0x807F807F,0, 1, 1}, 
+  {0x807F40BF,1, 1, 2}, 
+  {0x807FC03F,2, 1, 3}, 
+  {0x807FDA25,3, 1, 4},
+  {0x807FA05F,4, 1, 5},
+  {0x807F609F,0, 0, 6},
+  {0x807FE01F,1, 0, 7},
+  {0x807F10EF,2, 0, 8},
+  {0x807F906F,3, 0, 9},
+  {0x807F00FF,4, 0, 0},
+};
+
+
+// *****************************************
 // LED RGB LIGHT BULB
 // *****************************************
 const int NUMBER_OF_bulbELEMENTS = 24;
@@ -44,6 +70,9 @@ const bulbCODES bulbArr [NUMBER_OF_bulbELEMENTS] PROGMEM = {
   { 0xF700FF, "bulbBRITER" }, { 0xF7807F, "bulbDIMMER" }, { 0xF740BF, "bulbOFF" }, { 0xF7C03F, "bulbON" },
 };
 
+
+
+
 // MEGA 2560 PINS 
 const byte IRRX_PIN = 5;      // IMPLICITLY DEFINED IN IRLIB LIBRARY
 const byte RCRX_PIN = 2; 
@@ -54,17 +83,21 @@ const byte RHTX_PIN = 12;
 const byte PWR1_PIN = 13;  // RFTX POWER
 const byte GND1_PIN = A3; 
 const byte LED1_PIN = A0;
+const byte BUZZ_PIN = 6;   // BUZZER PIN
 
 const byte ANA1_PIN = A1;  // 
 const byte ANA2_PIN = A2;  // LDR
-const byte DIG1_PIN = 7;  // PIR
-const byte DIG2_PIN = 11;  // 
+const byte DIG1_PIN = 7;   // PIR
+const byte DIG2_PIN = 11;  
+
 
 // MICROPHONE
 const byte mANA_PIN = A4;
 const byte mGND_PIN = A5;
 const byte mPWR_PIN = A6;
 const byte mDIG_PIN = A7;
+
+
 
 
 
@@ -156,6 +189,7 @@ void setup() {
   pinMode(PWR1_PIN, OUTPUT); digitalWrite(PWR1_PIN, HIGH);
   pinMode(mPWR_PIN, OUTPUT); digitalWrite(mPWR_PIN, HIGH);
   pinMode(LED1_PIN, OUTPUT); digitalWrite(LED1_PIN, HIGH);
+  pinMode(BUZZ_PIN, OUTPUT); digitalWrite(BUZZ_PIN, LOW);
   
   LED_FLASH(8, 50, LED1_PIN);  
 
@@ -287,6 +321,11 @@ void loop() {
     
   }
   else{}
+  
+  if(irValue!=0)
+  {
+    IR_CODE_CHECK(irValue);
+  }
 
   irValue=0;
   delay(4);
@@ -296,9 +335,51 @@ void loop() {
 
 
 
+
+
+
+
 // #######################################################
 // FUNCTIONS
 // #######################################################
+
+// SENSOR READ FUNCTION
+void IR_CODE_CHECK(long int code){
+ 
+   while(arrCNT<NUMBER_OF_keypadELEMENTS ){
+     
+      keypadCODES keypadItem1;
+      memcpy_P (&keypadItem1, &keypadArr[arrCNT], sizeof keypadItem1);
+     
+      int ID = int(keypadItem1.keypadID);  
+      
+      if(code==keypadItem1.keypadCodeArr)
+      {
+        Serial.print(ID);
+        if(keypadItem1.keypadState==1)
+        {
+          Serial.println(":ON");  
+          RC_SEND(ID, 1);  
+          break;
+        } 
+        else if(keypadItem1.keypadState==0)
+        {
+          Serial.println("OFF");  
+          RC_SEND(ID, 0); 
+          break; 
+        }
+        break;
+      }
+      else{} 
+      arrCNT++;     
+   }  // END WHILE LOOP
+   
+  
+  
+  
+}
+
+
 
 
 // RTC FUNCTION
