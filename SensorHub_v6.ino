@@ -73,6 +73,27 @@ const keypadCODES keypadArr [NUMBER_OF_keypadELEMENTS] PROGMEM = {
 };
 
 
+
+// *****************************************
+// NON-NUMERIC REMOTE CODES TEL
+// *****************************************
+
+const int NUMBER_OF_TVcontrolELEMENTS = 30;
+typedef struct {
+   long int TVcontrolCodeArr;
+   byte TVcontrolID;
+   byte TVcontrolState;
+   byte TVcontrolVal;
+} TVcontrolCODES;
+
+const TVcontrolCODES TVcontrolArr [NUMBER_OF_TVcontrolELEMENTS] PROGMEM = {
+  { 0x807F807F ,0, 1, 1 }, 
+ 
+  { 0x807F58A7, 4, 0, 0 },  
+};
+
+
+
 // *****************************************
 // LED RGB LIGHT BULB
 // *****************************************
@@ -168,10 +189,20 @@ byte mic_flag = 0;
 byte led_flag = 0;
 
 // ^^^^ TIME DELAYS ^^^^
-unsigned long previousMillis = 0;
+unsigned long prevMillMIC = 0;
 unsigned long prevMillisPRINT = 0;
 const unsigned long interval = 3000;  
 const unsigned long intervalPRINT = 7000; 
+
+
+
+// ^^^^ PIR VARIABLES ^^^^
+unsigned long prevMillPIR = 0;
+unsigned long currMillPIR = 0;
+const unsigned long intervalPIR = 300000; 
+byte pir_flag=0;
+byte pir_prev=0;
+byte pir_curr=0;
 
 
 // #######################################################
@@ -235,6 +266,8 @@ void setup() {
 // MAIN LOOP
 // #######################################################
 void loop() {
+  
+  unsigned long currMill=millis();
 
   delay(4);
   
@@ -246,24 +279,23 @@ void loop() {
   int  mANA_VAL = analogRead(mANA);
   byte mDIG_VAL = analogRead(mDIG); 
   
-  unsigned long currentMillis=millis();
-    
+  unsigned long currMillMIC=millis();
   if(mDIG_VAL > mic_threshold &  led_flag==0)
   {
     mic_flag = 1;
     led_flag=1;
-    currentMillis = millis();
-    previousMillis = currentMillis; 
+    currMillMIC = millis();
+    prevMillMIC = currMillMIC; 
     digitalWrite(LED1_PIN, HIGH);
     Serial.print(F("ANA MIC:"));     Serial.print(mANA_VAL);
     Serial.print(F(" | DIG MIC: ")); Serial.println(mDIG_VAL); 
   }
  
-  if(currentMillis - previousMillis >= interval && mic_flag==1) 
+  if(currMillMIC - prevMillMIC >= interval && mic_flag==1) 
   {
-    unsigned long currentMillis = millis();
+    unsigned long currMilMIC = millis();
     digitalWrite(LED1_PIN, LOW);
-    previousMillis = currentMillis;   
+    prevMillMIC = currMilMIC;   
     mic_flag = 0;
     led_flag = 0;
     Serial.println(F("LIGHT OFF")); 
@@ -284,12 +316,42 @@ void loop() {
 
   }
   
-  if(PIR_VAL!=0){
-    digitalWrite(LED1_PIN, HIGH);
-  } 
-  else{
-    digitalWrite(LED1_PIN, LOW);
+  
+  
+  // PIR LOGIC
+  pir_curr=PIR_VAL;
+  if(pir_curr!=pir_prev && pir_curr==0)
+  {
+    Serial.println(F("PIR TIMER STARTED"));
+    prevMillPIR=currMill;
+    pir_flag=1;
   }
+  else if(pir_curr==1)
+  {
+    prevMillPIR=currMill;
+    pir_flag=0;
+  }  
+  
+  if( (currMill - prevMillPIR >= intervalPIR) && pir_flag==1) {
+    prevMillPIR = currMillPIR;   
+    pir_flag=0;
+    IR_SEND(0x807FE817);   // WH SLEEP
+    delay(1000);
+    IR_SEND(0x807FE817);   // WH SLEEP
+    Serial.println(F("TV OFF"));   //  Serial.print(LDR_VAL);
+  }  
+  
+  
+//  if(PIR_VAL!=0){
+//    digitalWrite(LED1_PIN, HIGH);
+//    pir_flag=0;
+//  } 
+//  else{
+//    digitalWrite(LED1_PIN, LOW);
+//  }
+  
+  pir_prev=pir_curr;
+  
 
 
   
