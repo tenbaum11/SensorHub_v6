@@ -28,6 +28,39 @@ const etekCODES etekArr [NUMBER_OF_etekELEMENTS] PROGMEM = {
 
 
 // *****************************************
+// WH FUNCTION CODES
+// *****************************************
+
+const int NUMBER_OF_WHfuncELEMENTS = 20;
+typedef struct {
+   long int irCodeArr;
+   long int whCodeArr;
+} WHfuncCODES;
+
+const WHfuncCODES WHfuncArr [NUMBER_OF_WHfuncELEMENTS] PROGMEM = {
+    { 0x1CE3D02F,  0x807FB04F },  // SY_CHNDWN
+    { 0x1CE350AF,  0x807F30CF },  // SY_CHNUP
+    { 0x1CE3F20D,  0x807F58A7 },  // SY_DOWN
+    { 0x1CE3CA35,  0x807F6897 },  // SY_EXIT
+    { 0x1CE3EA15,  0x807F42BD },  // SY_ASPECT
+    { 0x1CE3C837,  0x807F48B7 },  // SY_SOURCE
+    { 0x1CE3F807,  0x807FD827 },  // SY_LEFT
+    { 0x1CE3E817,  0x807FA857 },  // SY_MENU
+    { 0x1CE318E7,  0x807F8877 },  // SY_MUTE
+    { 0x1CE32AD5,  0x807FB847 },  // SY_OK
+    { 0x1CE348B7,  0x20DF10EF },  // SY_POWER 0x20DF10EF
+    { 0x1CE39867,  0x807FDA25 },  // SY_BACK
+    { 0x1CE338C7,  0x00 },        // SY_RESET
+    { 0x1CE37887,  0x807F38C7 },  // SY_RIGHT
+    { 0x1CE3B04F,  0x807FE817 },  // SY_SLEEP
+    { 0x1CE330CF,  0x807FC837 },  // SY_INFO
+    { 0x1CE3728D,  0x807F9867 },  // SY_UP
+    { 0x1CE3F00F,  0x807FF00F },  // SY_VOLDWN
+    { 0x1CE3708F,  0x807F708F },  // SY_VOLUP  
+};
+
+
+// *****************************************
 // KEYPAD CODES
 // *****************************************
 
@@ -40,7 +73,7 @@ typedef struct {
 } keypadCODES;
 
 const keypadCODES keypadArr [NUMBER_OF_keypadELEMENTS] PROGMEM = {
-  { 0x807F807F ,0, 1, 1 }, 
+  { 0x807F807F, 0, 1, 1 }, 
   { 0x807F40BF, 1, 1, 2 }, 
   { 0x807FC03F, 2, 1, 3 }, 
   { 0x807FDA25, 3, 1, 4 },
@@ -199,7 +232,7 @@ const unsigned long intervalPRINT = 7000;
 // ^^^^ PIR VARIABLES ^^^^
 unsigned long prevMillPIR = 0;
 unsigned long currMillPIR = 0;
-const unsigned long intervalPIR = 300000; 
+const unsigned long intervalPIR = 15000; 
 byte pir_flag=0;
 byte pir_prev=0;
 byte pir_curr=0;
@@ -335,10 +368,11 @@ void loop() {
   if( (currMill - prevMillPIR >= intervalPIR) && pir_flag==1) {
     prevMillPIR = currMillPIR;   
     pir_flag=0;
-    IR_SEND(0x807FE817);   // WH SLEEP
-    delay(1000);
-    IR_SEND(0x807FE817);   // WH SLEEP
     Serial.println(F("TV OFF"));   //  Serial.print(LDR_VAL);
+    delay(300);
+    IR_SEND(0x807FE817);   // WH SLEEP
+    //delay(1000);
+    //IR_SEND(0x807FE817);   // WH SLEEP
   }  
   
   
@@ -426,7 +460,10 @@ void loop() {
 // FUNCTIONS
 // #######################################################
 
+
+//------------------------------------
 // SENSOR READ FUNCTION
+//------------------------------------
 void IR_CODE_CHECK(long int code){
  
    byte ir_found_flag=0;
@@ -435,9 +472,8 @@ void IR_CODE_CHECK(long int code){
      
       keypadCODES keypadItem1;
       memcpy_P (&keypadItem1, &keypadArr[arrCNT], sizeof keypadItem1);
-     
-      int ID = int(keypadItem1.keypadID);  
-      
+    
+      int ID = int(keypadItem1.keypadID);   
       if(code==keypadItem1.keypadCodeArr)
       {
         Serial.print(ID);
@@ -461,18 +497,37 @@ void IR_CODE_CHECK(long int code){
       arrCNT++;     
    }  // END WHILE LOOP
    
-   if(ir_found_flag==0)
-   {
-     Serial.println(F("IR UNKNOWN"));
-   }
-  
- 
+   // -------------------------------------
+
+   byte WHfuncCNT=0;
+   while(WHfuncCNT<NUMBER_OF_WHfuncELEMENTS ){
+      
+      WHfuncCODES WHfuncItem1;
+      memcpy_P (&WHfuncItem1, &WHfuncArr[WHfuncCNT], sizeof WHfuncItem1);
+      
+      if(code==WHfuncItem1.irCodeArr)
+      {
+          Serial.print(F("EXEC WH FUNCTION: "));
+          Serial.println(WHfuncItem1.whCodeArr, HEX);
+          ir_found_flag=1;
+          IR_SEND(WHfuncItem1.whCodeArr); 
+          break;
+      }
+      else{} 
+      WHfuncCNT++;     
+      
+   }  // END WHILE LOOP
+   
+
+   if(ir_found_flag==0) Serial.println(F("IR UNKNOWN"));
+
 }
 
 
 
-
+//------------------------------------
 // RTC FUNCTION
+//------------------------------------
 void RTC_SHOW(){
     DateTime now = RTC.now();
     Serial.print(now.year(), DEC);
@@ -492,9 +547,9 @@ void RTC_SHOW(){
 
 
 
-//-------------------
+//------------------------------------
 // IR REMOTE SEND 
-//-------------------
+//------------------------------------
 void IR_SEND(unsigned long ircode)
 {
   
@@ -511,9 +566,9 @@ void IR_SEND(unsigned long ircode)
     unsigned long int down = 0x5743CC33;
     unsigned long int sleeps = 0x807FE817;
     
-    for(int h=0; h<15; h++){
+    for(int h=0; h<2; h++){
       irSendNEC.send(code_in);   // WESTINGHOUSE SLEEP
-      delay(100);
+      delay(355);
     }
     delay(10); 
     
