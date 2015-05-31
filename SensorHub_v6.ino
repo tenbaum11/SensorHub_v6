@@ -147,6 +147,10 @@ const byte DIG1_PIN = 7;   // PIR
 const byte DIG2_PIN = 11;  
 
 
+const byte RGB_PINS[3] = { A12, A14, A15 };
+const byte RGBgnd_PIN = A13;
+
+
 // MICROPHONE
 const byte mANA_PIN = A4;
 const byte mGND_PIN = A5;
@@ -247,12 +251,21 @@ void setup() {
   pinMode(DIG2_PIN, INPUT); 
   pinMode(mDIG_PIN, INPUT);
   
+  pinMode(RGBgnd_PIN, OUTPUT); digitalWrite(RGBgnd_PIN, LOW);
   pinMode(mGND_PIN, OUTPUT); digitalWrite(mGND_PIN, LOW);
   pinMode(GND1_PIN, OUTPUT); digitalWrite(GND1_PIN, LOW);
   pinMode(PWR1_PIN, OUTPUT); digitalWrite(PWR1_PIN, HIGH);
   pinMode(mPWR_PIN, OUTPUT); digitalWrite(mPWR_PIN, HIGH);
   pinMode(LED1_PIN, OUTPUT); digitalWrite(LED1_PIN, HIGH);
   pinMode(BUZZ_PIN, OUTPUT); digitalWrite(BUZZ_PIN, LOW);
+  
+  for (int thisPin=0; thisPin < 3; thisPin++) { 
+    pinMode(RGB_PINS[thisPin], OUTPUT); 
+    Serial.print("PIN: "); Serial.println(RGB_PINS[thisPin]); 
+    analogWrite(RGB_PINS[thisPin], 255); delay(1000);
+    analogWrite(RGB_PINS[thisPin], 0);   delay(1000);
+  }
+  
   
   LED_FLASH(8, 50, LED1_PIN);  
 
@@ -312,7 +325,8 @@ void loop() {
   if(currMill - prevMillisPRINT >= intervalPRINT) {
     prevMillisPRINT = currMill;   
     Serial.print(F("LDR:"));     Serial.print(LDR_VAL);
-    Serial.print(F(" | PIR: ")); Serial.println(PIR_VAL);
+    Serial.print(F(" | PIR: ")); Serial.print(PIR_VAL);
+    Serial.print(F(" | MIC: ")); Serial.println(mANA_VAL);
     RTC_SHOW();
   }
   
@@ -370,26 +384,10 @@ void loop() {
 
   if (irRecv.GetResults(&irDecoder)) {  
     IR_RECEIVE();
-      
-//      if(irDecoder.decode()) {
-//          //GotOne=true;
-//          irValue = irDecoder.value;
-//          irLen = irDecoder.bits;
-//          irType = irDecoder.decode_type;
-//              //irDecoder.decode();
-//          Serial.print(F("Received "));
-//          Serial.print(Pnames(irType));
-//          Serial.print(F(" Value:0x"));
-//          Serial.println(irDecoder.value, HEX);
-//          delay(500);
-//      }
-//      irRecv.resume();  
-  }
-  else{}
+  } else{}
   
   if(irValue!=0)
   {
-    Serial.println(F("Code check..."));  
     IR_CODE_CHECK(irValue);
   }
 
@@ -421,7 +419,7 @@ void loop() {
 // SENSOR READ FUNCTION
 //------------------------------------
 void IR_CODE_CHECK(long int code){
- 
+   Serial.println(F("Code check..."));
    byte ir_found_flag=0;
    byte arrCNT=0;
    while(arrCNT<NUMBER_OF_keypadELEMENTS ){
