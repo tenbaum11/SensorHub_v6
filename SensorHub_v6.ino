@@ -107,24 +107,6 @@ const keypadCODES keypadArr [NUMBER_OF_keypadELEMENTS] PROGMEM = {
 
 
 
-// *****************************************
-// NON-NUMERIC REMOTE CODES TEL
-// *****************************************
-
-const int NUMBER_OF_TVcontrolELEMENTS = 30;
-typedef struct {
-   long int TVcontrolCodeArr;
-   byte TVcontrolID;
-   byte TVcontrolState;
-   byte TVcontrolVal;
-} TVcontrolCODES;
-
-const TVcontrolCODES TVcontrolArr [NUMBER_OF_TVcontrolELEMENTS] PROGMEM = {
-  { 0x807F807F ,0, 1, 1 }, 
- 
-  { 0x807F58A7, 4, 0, 0 },  
-};
-
 
 
 // *****************************************
@@ -205,9 +187,9 @@ char RHMsg[20];
 
 // ^^^^ IR VARIABLES ^^^^
 IRrecv irRecv(IRRX_PIN);
-IRsend irSend;             // UNO PWM PIN 3
+//IRsend irSend;             // UNO PWM PIN 3
 IRsendNEC irSendNEC;       // irlib
-IRdecode irDecoder;        // irlib
+IRdecodeNEC irDecoder;        // irlib
 IRTYPES irType;
 unsigned int irBuffer[RAWBUF];
 unsigned long irValue; 
@@ -227,12 +209,9 @@ unsigned long prevMillisPRINT = 0;
 const unsigned long interval = 3000;  
 const unsigned long intervalPRINT = 7000; 
 
-
-
 // ^^^^ PIR VARIABLES ^^^^
 unsigned long prevMillPIR = 0;
-unsigned long currMillPIR = 0;
-const unsigned long intervalPIR = 15000; 
+const unsigned long intervalPIR = 300000; 
 byte pir_flag=0;
 byte pir_prev=0;
 byte pir_curr=0;
@@ -256,7 +235,7 @@ void setup() {
   Wire.begin();
   RTC.begin();  
   if (! RTC.isrunning()) {
-    Serial.println("RTC is NOT running!");
+    Serial.println(F("RTC is NOT running!"));
     // following line sets the RTC to the date & time this sketch was compiled
     RTC.adjust(DateTime(__DATE__, __TIME__));
   }  
@@ -300,10 +279,9 @@ void setup() {
 // #######################################################
 void loop() {
   
+  delay(4);
   unsigned long currMill=millis();
 
-  delay(4);
-  
   //***************************************
   // SENSOR code 
   //***************************************
@@ -311,47 +289,36 @@ void loop() {
   byte PIR_VAL = digitalRead(PIR);
   int  mANA_VAL = analogRead(mANA);
   byte mDIG_VAL = analogRead(mDIG); 
-  
-  unsigned long currMillMIC=millis();
-  if(mDIG_VAL > mic_threshold &  led_flag==0)
+
+  if(mDIG_VAL>mic_threshold && led_flag==0)
   {
     mic_flag = 1;
     led_flag=1;
-    currMillMIC = millis();
-    prevMillMIC = currMillMIC; 
+    prevMillMIC = currMill; 
     digitalWrite(LED1_PIN, HIGH);
     Serial.print(F("ANA MIC:"));     Serial.print(mANA_VAL);
     Serial.print(F(" | DIG MIC: ")); Serial.println(mDIG_VAL); 
   }
  
-  if(currMillMIC - prevMillMIC >= interval && mic_flag==1) 
+  if(currMill - prevMillMIC >= interval && mic_flag==1) 
   {
-    unsigned long currMilMIC = millis();
     digitalWrite(LED1_PIN, LOW);
-    prevMillMIC = currMilMIC;   
+    prevMillMIC = currMill;   
     mic_flag = 0;
     led_flag = 0;
     Serial.println(F("LIGHT OFF")); 
   }
   
-  unsigned long currtMillisPRINT=millis();
-  if(currtMillisPRINT - prevMillisPRINT >= intervalPRINT) {
-    prevMillisPRINT = currtMillisPRINT;   
+  if(currMill - prevMillisPRINT >= intervalPRINT) {
+    prevMillisPRINT = currMill;   
     Serial.print(F("LDR:"));     Serial.print(LDR_VAL);
     Serial.print(F(" | PIR: ")); Serial.println(PIR_VAL);
     RTC_SHOW();
-    
-    //RC_SEND(0,1);
-    //IR_SEND(0xF7E01F);     // LED Bulb WHITE
-    //delay(1000);
-    //IR_SEND(0xF750AF);     // LED Bulb Blue
-    //IR_SEND(0x807FE817);   // WH SLEEP
-
   }
   
-  
-  
+  //***************************************
   // PIR LOGIC
+  //*************************************** 
   pir_curr=PIR_VAL;
   if(pir_curr!=pir_prev && pir_curr==0)
   {
@@ -366,39 +333,22 @@ void loop() {
   }  
   
   if( (currMill - prevMillPIR >= intervalPIR) && pir_flag==1) {
-    prevMillPIR = currMillPIR;   
+    prevMillPIR = currMill;   
     pir_flag=0;
     Serial.println(F("TV OFF"));   //  Serial.print(LDR_VAL);
     delay(300);
     IR_SEND(0x807FE817);   // WH SLEEP
-    //delay(1000);
-    //IR_SEND(0x807FE817);   // WH SLEEP
   }  
-  
-  
-//  if(PIR_VAL!=0){
-//    digitalWrite(LED1_PIN, HIGH);
-//    pir_flag=0;
-//  } 
-//  else{
-//    digitalWrite(LED1_PIN, LOW);
-//  }
-  
   pir_prev=pir_curr;
   
 
-
-  
-
-  //Serial.println();
-  
   //***************************************
   // RCremote RX code 
   //***************************************
-  int etekState  = -1;
-  int etekSwitch = -1;
+  //int etekState  = -1;
+  //int etekSwitch = -1;
   if (RCrecv.available()) {
-    delay(1);
+    //delay(1);
     RC_RECEIVE();  
   }
   
@@ -419,22 +369,21 @@ void loop() {
   //***************************************  
 
   if (irRecv.GetResults(&irDecoder)) {  
+    IR_RECEIVE();
       
-      if(irDecoder.decode()) {
-          //GotOne=true;
-          irValue = irDecoder.value;
-          irLen = irDecoder.bits;
-          irType = irDecoder.decode_type;
-              //irDecoder.decode();
-          Serial.print(F("Received "));
-          Serial.print(Pnames(irType));
-          Serial.print(F(" Value:0x"));
-          Serial.println(irDecoder.value, HEX);
-          delay(500);
-      }
-    
-      irRecv.resume(); 
-    
+//      if(irDecoder.decode()) {
+//          //GotOne=true;
+//          irValue = irDecoder.value;
+//          irLen = irDecoder.bits;
+//          irType = irDecoder.decode_type;
+//              //irDecoder.decode();
+//          Serial.print(F("Received "));
+//          Serial.print(Pnames(irType));
+//          Serial.print(F(" Value:0x"));
+//          Serial.println(irDecoder.value, HEX);
+//          delay(500);
+//      }
+//      irRecv.resume();  
   }
   else{}
   
@@ -448,6 +397,13 @@ void loop() {
   delay(4);
 
 }  // # END MAIN LOOP 
+
+
+
+
+
+
+
 
 
 
@@ -546,6 +502,28 @@ void RTC_SHOW(){
 
 
 
+//------------------------------------
+// IR REMOTE SEND 
+//------------------------------------
+void IR_RECEIVE()
+{
+      if(irDecoder.decode()) {
+          //GotOne=true;
+          irValue = irDecoder.value;
+          irLen = irDecoder.bits;
+          irType = irDecoder.decode_type;
+              //irDecoder.decode();
+          Serial.print(F("Received "));
+          Serial.print(Pnames(irType));
+          Serial.print(F(" Value:0x"));
+          Serial.println(irDecoder.value, HEX);
+          delay(500);
+      }
+      irRecv.resume(); 
+}
+
+
+
 
 //------------------------------------
 // IR REMOTE SEND 
@@ -571,16 +549,7 @@ void IR_SEND(unsigned long ircode)
       delay(355);
     }
     delay(10); 
-    
-//    for(int h=0; h<3; h++){
-//      irSendNEC.send(0xF7E01F);   // WESTINGHOUSE SLEEP
-//      delay(100);
-//    }
-//    for(int h=0; h<3; h++){
-//      irSendNEC.send(0xF750AF);   // WESTINGHOUSE SLEEP
-//      delay(100);
-//    }
-    
+  
   irRecv.enableIRIn();
   RCrecv.enableReceive(0);
   RCsend.enableTransmit(RCTX_PIN);
@@ -616,7 +585,6 @@ void RC_RECEIVE()
   Etek_code = RCrecv.getReceivedValue();
   Etek_length = RCrecv.getReceivedBitlength();
   char* b = dec2binWzerofill(Etek_code, Etek_length);
-  //bb = dec2binWzerofill(Etek_code, Etek_length);
   
   if (value == 0) 
   {
@@ -634,6 +602,9 @@ void RC_RECEIVE()
   RCrecv.resetAvailable();
   
 }}
+
+
+
 
 
 //------------------------
