@@ -139,7 +139,7 @@ const byte RHTX_PIN = 12;
 const byte PWR1_PIN = 13;  // RFTX POWER
 const byte GND1_PIN = A3; 
 const byte LED1_PIN = A0;
-const byte BUZZ_PIN = 6;   // BUZZER PIN
+const byte BUZZ_PIN = 4;   // BUZZER PIN
 
 const byte ANA1_PIN = A1;  // 
 const byte ANA2_PIN = A2;  // LDR
@@ -266,6 +266,7 @@ void setup() {
     analogWrite(RGB_PINS[thisPin], 0);   delay(1000);
   }
   
+  digitalWrite(BUZZ_PIN, HIGH); delay(100); digitalWrite(BUZZ_PIN, LOW);
   
   LED_FLASH(8, 50, LED1_PIN);  
 
