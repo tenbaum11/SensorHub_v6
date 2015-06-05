@@ -205,11 +205,9 @@ int irLen;
 int irRECV_flag=0;
 
 
-
 // ^^^^ MIC VARIABLES ^^^^
-int mic_threshold = 500;
 byte mic_flag = 0;
-byte led_flag = 0;
+
 
 // ^^^^ TIME DELAYS ^^^^
 unsigned long prevMillMIC = 0;
@@ -311,24 +309,6 @@ void loop() {
   int  mANA_VAL = analogRead(mANA);
   byte mDIG_VAL = analogRead(mDIG); 
 
-  if(mDIG_VAL>mic_threshold && led_flag==0)
-  {
-    mic_flag = 1;
-    led_flag=1;
-    prevMillMIC = currMill; 
-    digitalWrite(LED1_PIN, HIGH);
-    Serial.print(F("ANA MIC:"));     Serial.print(mANA_VAL);
-    Serial.print(F(" | DIG MIC: ")); Serial.println(mDIG_VAL); 
-  }
- 
-  if(currMill - prevMillMIC >= interval && mic_flag==1) 
-  {
-    digitalWrite(LED1_PIN, LOW);
-    prevMillMIC = currMill;   
-    mic_flag = 0;
-    led_flag = 0;
-    Serial.println(F("LIGHT OFF")); 
-  }
   
   if(currMill - prevMillisPRINT >= intervalPRINT) {
     prevMillisPRINT = currMill;   
@@ -367,10 +347,7 @@ void loop() {
   //***************************************
   // RCremote RX code 
   //***************************************
-  //int etekState  = -1;
-  //int etekSwitch = -1;
   if (RCrecv.available()) {
-    //delay(1);
     RC_RECEIVE();  
   }
   
