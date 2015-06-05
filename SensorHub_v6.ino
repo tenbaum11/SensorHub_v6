@@ -7,6 +7,10 @@
 #include "RTClib.h"
 RTC_DS1307 RTC;
 
+#include <dht.h>
+dht DHT;
+#define DHT11_PIN 5
+
 
 // *****************************************
 // ETEK CODES
@@ -295,6 +299,9 @@ void loop() {
   
   delay(4);
   unsigned long currMill=millis();
+  
+  // GET DHT DATA
+  DHT_READ_FUNC();
 
   //***************************************
   // SENSOR code 
