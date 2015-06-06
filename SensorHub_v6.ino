@@ -9,7 +9,7 @@ RTC_DS1307 RTC;
 
 #include <dht.h>
 dht DHT;
-#define DHT11_PIN 5
+#define DHT11_PIN 6
 
 
 // *****************************************
@@ -213,11 +213,11 @@ byte mic_flag = 0;
 unsigned long prevMillMIC = 0;
 unsigned long prevMillisPRINT = 0;
 const unsigned long interval = 3000;  
-const unsigned long intervalPRINT = 7000; 
+const unsigned long intervalPRINT = 9000; 
 
 // ^^^^ PIR VARIABLES ^^^^
 unsigned long prevMillPIR = 0;
-const unsigned long intervalPIR = 300000; 
+const unsigned long intervalPIR = 20000; 
 byte pir_flag=0;
 byte pir_prev=0;
 byte pir_curr=0;
@@ -261,11 +261,12 @@ void setup() {
   pinMode(LED1_PIN, OUTPUT); digitalWrite(LED1_PIN, HIGH);
   pinMode(BUZZ_PIN, OUTPUT); digitalWrite(BUZZ_PIN, LOW);
   
+  Serial.println();
   for (int thisPin=0; thisPin < 3; thisPin++) { 
     pinMode(RGB_PINS[thisPin], OUTPUT); 
     Serial.print("PIN: "); Serial.println(RGB_PINS[thisPin]); 
     analogWrite(RGB_PINS[thisPin], 255); delay(1000);
-    analogWrite(RGB_PINS[thisPin], 0);   delay(1000);
+    analogWrite(RGB_PINS[thisPin], 0);   delay(300);
   }
   
   digitalWrite(BUZZ_PIN, HIGH); delay(100); digitalWrite(BUZZ_PIN, LOW);
@@ -298,8 +299,8 @@ void loop() {
   delay(4);
   unsigned long currMill=millis();
   
-  // GET DHT DATA
-  DHT_READ_FUNC();
+
+
 
   //***************************************
   // SENSOR code 
@@ -312,6 +313,8 @@ void loop() {
   
   if(currMill - prevMillisPRINT >= intervalPRINT) {
     prevMillisPRINT = currMill;   
+    // GET DHT DATA
+    DHT_READ_FUNC(); 
     Serial.print(F("LDR:"));     Serial.print(LDR_VAL);
     Serial.print(F(" | PIR: ")); Serial.print(PIR_VAL);
     Serial.print(F(" | MIC: ")); Serial.println(mANA_VAL);
@@ -321,6 +324,9 @@ void loop() {
   //***************************************
   // PIR LOGIC
   //*************************************** 
+  if(PIR_VAL==1) analogWrite(RGB_PINS[1], 255); 
+    else analogWrite(RGB_PINS[1], 0);
+  
   pir_curr=PIR_VAL;
   if(pir_curr!=pir_prev && pir_curr==0)
   {
@@ -338,6 +344,7 @@ void loop() {
     prevMillPIR = currMill;   
     pir_flag=0;
     Serial.println(F("TV OFF"));   //  Serial.print(LDR_VAL);
+    LED_FLASH(1, 1000, BUZZ_PIN); 
     delay(300);
     IR_SEND(0x807FE817);   // WH SLEEP
   }  
