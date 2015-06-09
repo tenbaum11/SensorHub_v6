@@ -130,8 +130,16 @@ const bulbCODES bulbArr [NUMBER_OF_bulbELEMENTS] PROGMEM = {
   { 0xF700FF, "bulbBRITER" }, { 0xF7807F, "bulbDIMMER" }, { 0xF740BF, "bulbOFF" }, { 0xF7C03F, "bulbON" },
 };
 
-
-
+// *****************************************
+// LED RGB ROPE
+// *****************************************
+//const long int ROPEon = 0xFF02FD;
+//const long int ROPEr1 = 0xFF9A65;
+//const long int ROPEg1 = 0xFF1AE5;
+//const long int ROPEb1 = 0xFFA25D;
+//const long int ROPEw  = 0xFF0022DD;
+//const long int ROPEbrt  = 0xFF003AC5;
+//const long int ROPEdim  = 0xFF00BA45;
 
 // MEGA 2560 PINS 
 const byte IRRX_PIN = 5;      // IMPLICITLY DEFINED IN IRLIB LIBRARY
@@ -189,7 +197,10 @@ unsigned int pulsetime = 140;  // RCremote pulse out
 
 
 // ^^^^ RH VARIABLES^^^^
+#define CLIENT_ADDRESS 1
+#define SERVER_ADDRESS 2
 RH_ASK driver(2000,RHRX_PIN,RHTX_PIN);  //(speed, RXpin, TXpin, ptt;IN, inverted)
+RHDatagram manager(driver, SERVER_ADDRESS);
 char RHMsg[20];
 
 
@@ -217,7 +228,7 @@ const unsigned long intervalPRINT = 9000;
 
 // ^^^^ PIR VARIABLES ^^^^
 unsigned long prevMillPIR = 0;
-const unsigned long intervalPIR = 20000; 
+const unsigned long intervalPIR = 200000; 
 byte pir_flag=0;
 byte pir_prev=0;
 byte pir_curr=0;
@@ -235,8 +246,8 @@ byte pir_curr=0;
 // #######################################################
 void setup() {
   Serial.begin(9600);
-    // if(!driver.init()) {Serial.println(F("init failed"));}  // screwed up ir library
-  
+    // if(!driver.init())  { Serial.println(F("init failed")); }  // screwed up ir library
+    // if(!manager.init()) {  Serial.println(F("init failed")); 
   // RTC REAL-TIME CLOCK
   Wire.begin();
   RTC.begin();  
@@ -345,7 +356,9 @@ void loop() {
     pir_flag=0;
     Serial.println(F("TV OFF"));   //  Serial.print(LDR_VAL);
     LED_FLASH(1, 1000, BUZZ_PIN); 
-    delay(300);
+    delay(3000);
+    IR_SEND(0x807FE817);   // WH SLEEP
+    IR_SEND(0x807FE817);   // WH SLEEP
     IR_SEND(0x807FE817);   // WH SLEEP
   }  
   pir_prev=pir_curr;
