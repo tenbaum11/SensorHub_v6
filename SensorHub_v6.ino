@@ -600,11 +600,12 @@ void RH_RECEIVE2()
     {
       sscanf ((char*)buf, "%d%*c%d%*c%d%*c%d%", &W, &X, &Y, &Z);
       //sscanf ((char*)buf, "%d%*", &testX);//123,456,7890      
-      Serial.print("got: ");
+      Serial.print("got[");
+      Serial.print(from); Serial.print("]: ");
       Serial.print(W); Serial.print(F("|"));
       Serial.print(X); Serial.print(F("|"));
       Serial.print(Y); Serial.print(F("|"));
-      Serial.print(Z);
+      Serial.println(Z);
       //Serial.print(": ");
      // Serial.println((char*)buf);      
     }    
