@@ -2,6 +2,10 @@
 // DHT FUNCTIONS
 void DHT_READ_FUNC()
 {
+  RCrecv.disableReceive();
+  RCsend.disableTransmit();
+  driver.setModeIdle();
+  delay(20);
   int chk = DHT.read11(DHT11_PIN);
   switch (chk)
   {
@@ -33,6 +37,13 @@ void DHT_READ_FUNC()
   Serial.println(DHT.temperature, 1);
 
   delay(2000);
+  
+  //irRecv.enableIRIn();
+  RCrecv.enableReceive(0);
+  RCsend.enableTransmit(RCTX_PIN);
+  RCsend.setProtocol(1);
+  RCsend.setPulseLength(pulsetime);
+  driver.setModeRx();
 }
 
 

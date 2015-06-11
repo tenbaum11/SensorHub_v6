@@ -1,4 +1,5 @@
 #include <MemoryFree.h>
+#include <RHDatagram.h>
 #include <RH_ASK.h>
 #include <SPI.h> // Not actualy used but needed to compile
 #include <RCSwitch.h>
@@ -224,15 +225,20 @@ byte mic_flag = 0;
 unsigned long prevMillMIC = 0;
 unsigned long prevMillisPRINT = 0;
 const unsigned long interval = 3000;  
-const unsigned long intervalPRINT = 9000; 
+const unsigned long intervalPRINT = 15000; 
 
 // ^^^^ PIR VARIABLES ^^^^
 unsigned long prevMillPIR = 0;
-const unsigned long intervalPIR = 200000; 
+const unsigned long intervalPIR = 900000; 
 byte pir_flag=0;
 byte pir_prev=0;
 byte pir_curr=0;
 
+
+int W=0;
+int X=0;
+int Y=0;
+int Z=0;
 
 // #######################################################
 // RTC
@@ -244,10 +250,12 @@ byte pir_curr=0;
 // #######################################################
 // SETUP
 // #######################################################
-void setup() {
+void setup() 
+{
   Serial.begin(9600);
+    if(!manager.init()) {  Serial.println(F("init failed")); } 
     // if(!driver.init())  { Serial.println(F("init failed")); }  // screwed up ir library
-    // if(!manager.init()) {  Serial.println(F("init failed")); 
+     
   // RTC REAL-TIME CLOCK
   Wire.begin();
   RTC.begin();  
@@ -264,13 +272,13 @@ void setup() {
   pinMode(DIG2_PIN, INPUT); 
   pinMode(mDIG_PIN, INPUT);
   
-  pinMode(RGBgnd_PIN, OUTPUT); digitalWrite(RGBgnd_PIN, LOW);
-  pinMode(mGND_PIN, OUTPUT); digitalWrite(mGND_PIN, LOW);
-  pinMode(GND1_PIN, OUTPUT); digitalWrite(GND1_PIN, LOW);
+  pinMode(RGBgnd_PIN, OUTPUT); analogWrite(RGBgnd_PIN, 0);
+  pinMode(mGND_PIN, OUTPUT); analogWrite(mGND_PIN, 0);
+  pinMode(GND1_PIN, OUTPUT); analogWrite(GND1_PIN, 0);
   pinMode(PWR1_PIN, OUTPUT); digitalWrite(PWR1_PIN, HIGH);
-  pinMode(mPWR_PIN, OUTPUT); digitalWrite(mPWR_PIN, HIGH);
-  pinMode(LED1_PIN, OUTPUT); digitalWrite(LED1_PIN, HIGH);
-  pinMode(BUZZ_PIN, OUTPUT); digitalWrite(BUZZ_PIN, LOW);
+  pinMode(mPWR_PIN, OUTPUT); analogWrite(mPWR_PIN, 254);
+  pinMode(LED1_PIN, OUTPUT); digitalWrite(LED1_PIN, 0);
+  pinMode(BUZZ_PIN, OUTPUT); digitalWrite(BUZZ_PIN, 0);
   
   Serial.println();
   for (int thisPin=0; thisPin < 3; thisPin++) { 
@@ -280,7 +288,7 @@ void setup() {
     analogWrite(RGB_PINS[thisPin], 0);   delay(300);
   }
   
-  digitalWrite(BUZZ_PIN, HIGH); delay(100); digitalWrite(BUZZ_PIN, LOW);
+  digitalWrite(BUZZ_PIN, HIGH); delay(10); digitalWrite(BUZZ_PIN, LOW);
   
   LED_FLASH(8, 50, LED1_PIN);  
 
@@ -305,6 +313,9 @@ void setup() {
 // #######################################################
 // MAIN LOOP
 // #######################################################
+
+uint8_t data[] = "And hello back to you";
+uint8_t buf[RH_ASK_MAX_MESSAGE_LEN]; // Dont put this on the stack:
 void loop() {
   
   delay(4);
@@ -324,8 +335,12 @@ void loop() {
   
   if(currMill - prevMillisPRINT >= intervalPRINT) {
     prevMillisPRINT = currMill;   
+    digitalWrite(PWR1_PIN, 0);
+    digitalWrite(mPWR_PIN, 0);
     // GET DHT DATA
+    delay(90);
     DHT_READ_FUNC(); 
+    delay(90);
     Serial.print(F("LDR:"));     Serial.print(LDR_VAL);
     Serial.print(F(" | PIR: ")); Serial.print(PIR_VAL);
     Serial.print(F(" | MIC: ")); Serial.println(mANA_VAL);
@@ -374,13 +389,8 @@ void loop() {
   
   //***************************************  
   // RADIOHEAD RX CODE 
-  //***************************************
-  uint8_t RHbuf[RH_ASK_MAX_MESSAGE_LEN];
-  uint8_t RHbuflen = sizeof(RHbuf);
-  if (driver.recv(RHbuf, &RHbuflen)) // Non-blocking
-  {
-    RH_RECEIVE((uint8_t *)RHbuf, RHbuflen);
-  } 
+  //***************************************  
+  RH_RECEIVE2();
   
 
   //***************************************  
@@ -577,6 +587,29 @@ void RH_RECEIVE(uint8_t *RHbuf, uint8_t RHbuflen)
     }
     Serial.print(RHMsg); Serial.println();
 } 
+
+
+void RH_RECEIVE2()
+{
+  if (manager.available())
+  {
+    uint8_t len = sizeof(buf);
+    uint8_t from;
+    
+    if (manager.recvfrom(buf, &len, &from))
+    {
+      sscanf ((char*)buf, "%d%*c%d%*c%d%*c%d%", &W, &X, &Y, &Z);
+      //sscanf ((char*)buf, "%d%*", &testX);//123,456,7890      
+      Serial.print("got: ");
+      Serial.print(W); Serial.print(F("|"));
+      Serial.print(X); Serial.print(F("|"));
+      Serial.print(Y); Serial.print(F("|"));
+      Serial.print(Z);
+      //Serial.print(": ");
+     // Serial.println((char*)buf);      
+    }    
+  }
+}
 
 
 //-------------------
